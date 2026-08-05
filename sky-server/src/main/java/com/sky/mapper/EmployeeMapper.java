@@ -20,4 +20,8 @@ public interface EmployeeMapper {
     List<Employee> pageQuery(String name);
 
     void insert(Employee employee);
+
+    void update(Employee employee);
+
+    Employee getById(Long id);
 }
