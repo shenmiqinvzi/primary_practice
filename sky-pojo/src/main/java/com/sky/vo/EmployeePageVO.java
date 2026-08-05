@@ -1,0 +1,37 @@
+package com.sky.vo;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+/**
+ * 员工登录成功后，返回给前端的数据（出参）
+ * 注意：不包含密码
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class EmployeePageVO implements Serializable{
+    private Long id;
+
+    private String name;
+
+    private String username;
+
+    private String phone;
+
+    private String sex;
+
+    private String idNumber;
+
+    private Integer status;
+
+    private LocalDateTime createTime;
+
+    private LocalDateTime updateTime;
+
+}

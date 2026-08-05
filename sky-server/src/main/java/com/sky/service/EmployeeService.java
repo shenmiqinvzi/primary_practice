@@ -1,0 +1,20 @@
+package com.sky.service;
+
+import com.sky.dto.EmployeeLoginDTO;
+import com.sky.entity.Employee;
+import com.sky.result.PageResult;
+
+/**
+ * 员工相关业务接口
+ */
+public interface EmployeeService {
+
+    /**
+     * 员工登录
+     */
+    Employee login(EmployeeLoginDTO employeeLoginDTO);
+
+    PageResult pageQuery(Integer page, Integer pageSize, String name);
+
+    void save(EmployeeLoginDTO employeeLoginDTO);
+}
