@@ -27,3 +27,63 @@ CREATE TABLE employee (
 -- 初始员工：admin / 123456（123456 的 MD5）
 INSERT INTO employee (name, username, password, phone, sex, id_number, status, create_time, update_time, create_user, update_user)
 VALUES ('管理员', 'admin', 'e10adc3949ba59abbe56e057f20f883e', '13812345678', '1', '110101199001010047', 1, NOW(), NOW(), 1, 1);
+
+
+DROP TABLE IF EXISTS category;
+CREATE TABLE category (
+                          id          BIGINT      NOT NULL AUTO_INCREMENT COMMENT
+  '主键',
+                          type        INT         DEFAULT NULL COMMENT '类型：1菜品分类
+  2套餐分类',
+                          name        VARCHAR(32) NOT NULL COMMENT '分类名称',
+                          sort        INT         NOT NULL DEFAULT 0 COMMENT
+  '排序，越小越靠前',
+                          status      INT         DEFAULT 1 COMMENT '状态：1启用 0禁用',
+                          create_time DATETIME    DEFAULT NULL COMMENT '创建时间',
+                          update_time DATETIME    DEFAULT NULL COMMENT '更新时间',
+                          create_user BIGINT      DEFAULT NULL COMMENT '创建人',
+                          update_user BIGINT      DEFAULT NULL COMMENT '更新人',
+                          PRIMARY KEY (id),
+                          UNIQUE KEY idx_category_name (name)
+) ENGINE=InnoDB COMMENT='菜品及套餐分类';
+
+
+
+INSERT INTO category VALUES (1, 1, '热菜', 1, 1, NOW(), NOW(), 1,
+                             1);
+INSERT INTO category VALUES (2, 1, '凉菜', 2, 1, NOW(), NOW(), 1,
+                             1);
+INSERT INTO category VALUES (3, 1, '主食', 3, 1, NOW(), NOW(), 1,
+                             1);
+INSERT INTO category VALUES (4, 2, '人气套餐', 1, 1, NOW(), NOW(),
+                             1, 1);
+INSERT INTO category VALUES (5, 2, '商务套餐', 2, 1, NOW(), NOW(),
+                             1, 1);
+
+DROP TABLE IF EXISTS dish;
+CREATE TABLE dish (
+                      id          BIGINT      NOT NULL AUTO_INCREMENT COMMENT
+  '主键',
+                      name        VARCHAR(32) NOT NULL COMMENT '菜品名称',
+                      category_id BIGINT      NOT NULL COMMENT '分类id',
+                      price       DECIMAL(10,2) NOT NULL COMMENT '价格',
+                      image       VARCHAR(255) DEFAULT NULL COMMENT '图片',
+                      description VARCHAR(255) DEFAULT NULL COMMENT '描述',
+                      status      INT         DEFAULT 1 COMMENT '状态：1起售 0停售',
+                      create_time DATETIME    DEFAULT NULL,
+                      update_time DATETIME    DEFAULT NULL,
+                      create_user BIGINT      DEFAULT NULL,
+                      update_user BIGINT      DEFAULT NULL,
+                      PRIMARY KEY (id)
+) ENGINE=InnoDB COMMENT='菜品表';
+
+
+
+DROP TABLE IF EXISTS dish_flavor;
+CREATE TABLE dish_flavor (
+                             id       BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+                             dish_id  BIGINT       NOT NULL COMMENT '菜品id',
+                             name     VARCHAR(32)  DEFAULT NULL COMMENT '口味名称',
+                             value    VARCHAR(255) DEFAULT NULL COMMENT '口味值',
+                             PRIMARY KEY (id)
+) ENGINE=InnoDB COMMENT='菜品口味表';
