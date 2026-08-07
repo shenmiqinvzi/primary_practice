@@ -1,0 +1,74 @@
+package com.sky.service.impl;
+
+import org.springframework.beans.BeanUtils;   // ✅
+
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.sky.constant.StatusConstant;
+import com.sky.context.BaseContext;
+import com.sky.dto.DishDTO;
+import com.sky.dto.DishPageQueryDTO;
+import com.sky.entity.Dish;
+import com.sky.entity.DishFlavor;
+import com.sky.exception.BaseException;
+import com.sky.mapper.DishFlavorMapper;
+import com.sky.mapper.DishMapper;
+import com.sky.result.PageResult;
+import com.sky.service.DishService;
+import com.sky.vo.DishVO;
+import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+
+@Service
+@Slf4j
+public class DishServiceImpl implements DishService {
+    @Autowired
+    private DishMapper dishMapper;
+    @Autowired
+    private DishFlavorMapper dishFlavorMapper;
+    @Override
+    public PageResult pageQuery(DishPageQueryDTO dto){
+        PageHelper.startPage(dto.getPage(), dto.getPageSize());
+        Page<DishVO> page=(Page<DishVO>)dishMapper.pageQuery(dto);
+        return new PageResult(page.getTotal(),page.getResult());
+    }
+
+    @Override
+    @Transactional
+    public void saveWithFlavor(DishDTO dishDTO){
+        Dish dish=new Dish();
+        BeanUtils.copyProperties(dishDTO,dish);
+        dish.setStatus(StatusConstant.ENABLE);
+        dish.setCreateTime(LocalDateTime.now());
+        dish.setUpdateTime(LocalDateTime.now());
+        dish.setCreateUser(BaseContext.getCurrentId());
+        dish.setUpdateUser(BaseContext.getCurrentId());
+        dishMapper.insert(dish);
+
+        List<DishFlavor> flavors=dishDTO.getFlavors();
+        if(flavors!=null&&!flavors.isEmpty()){
+            flavors.forEach(f->f.setDishId(dish.getId()));
+            dishFlavorMapper.insertBatch(flavors);
+        }
+    }
+
+    @Override
+    public void deleteBatch(List<Long> ids){
+        if(ids==null||ids.isEmpty()) return;
+        Integer count=dishMapper.countByStatusAndIds(ids, StatusConstant.ENABLE);
+        if(count!=null&&count>0){
+            throw new BaseException("起售中的菜品不可以删除，请先停售");
+        }
+
+        dishMapper.deleteByIds(ids);
+        log.info("批量删除菜品成功，ids: {}", ids);
+        
+    }
+}
