@@ -17,7 +17,6 @@ import com.sky.result.PageResult;
 import com.sky.service.DishService;
 import com.sky.vo.DishVO;
 import lombok.extern.slf4j.Slf4j;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -70,5 +69,52 @@ public class DishServiceImpl implements DishService {
         dishMapper.deleteByIds(ids);
         log.info("批量删除菜品成功，ids: {}", ids);
         
+    }
+
+    @Override
+    public DishVO getByIdWithFlavor(Long id){
+        Dish dish=dishMapper.getById(id);
+        List<DishFlavor> flavors=dishFlavorMapper.getByDishId(id);
+        DishVO dishVO=new DishVO();
+        BeanUtils.copyProperties(dish, dishVO);
+        dishVO.setFlavors(flavors);
+        return dishVO;
+    }
+
+    @Override
+    @Transactional
+    public void updateWithFlavor(DishDTO dishDTO){
+        Dish dish=new Dish();
+        BeanUtils.copyProperties(dishDTO, dish);
+
+        dish.setUpdateTime(LocalDateTime.now());
+        dish.setUpdateUser(BaseContext.getCurrentId());
+
+        dishMapper.update(dish);
+        dishFlavorMapper.deleteByDishId(dishDTO.getId());
+
+        List<DishFlavor>flavors=dishDTO.getFlavors();
+
+        if(flavors!=null&&!flavors.isEmpty()){
+            for(DishFlavor flavor:flavors){
+                flavor.setDishId(dishDTO.getId());
+            }
+            dishFlavorMapper.insertBatch(flavors);
+        }
+        log.info("修改菜品成功，ID:{}",dishDTO.getId());
+    }
+
+    @Override
+    public void startOrStop(Integer status,Long id){
+        if (status != StatusConstant.ENABLE && status != StatusConstant.DISABLE) {throw new BaseException("非法的菜品状态值：" + status);}
+
+        Dish dish=Dish.builder()
+                    .id(id)
+                    .status(status)
+                    .updateTime(LocalDateTime.now())
+                    .updateUser(BaseContext.getCurrentId())
+                    .build();
+        dishMapper.update(dish);
+        log.info("菜品状态修改成功：id={}, status={}", id, status);
     }
 }
