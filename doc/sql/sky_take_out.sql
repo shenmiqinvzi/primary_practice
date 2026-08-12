@@ -87,3 +87,31 @@ CREATE TABLE dish_flavor (
                              value    VARCHAR(255) DEFAULT NULL COMMENT '口味值',
                              PRIMARY KEY (id)
 ) ENGINE=InnoDB COMMENT='菜品口味表';
+
+CREATE TABLE setmeal (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    category_id BIGINT NOT NULL COMMENT '分类ID',
+    name VARCHAR(32) NOT NULL COMMENT '套餐名称',
+    price DECIMAL(10,2) NOT NULL COMMENT '套餐价格',
+    image VARCHAR(255) DEFAULT NULL COMMENT '图片路径',
+    description VARCHAR(255) DEFAULT NULL COMMENT '描述',
+    status INT DEFAULT 1 COMMENT '状态：1起售 0停售',
+    create_time DATETIME DEFAULT NULL COMMENT '创建时间',
+    update_time DATETIME DEFAULT NULL COMMENT '更新时间',
+    create_user BIGINT DEFAULT NULL COMMENT '创建人',
+    update_user BIGINT DEFAULT NULL COMMENT '更新人',
+    PRIMARY KEY (id),
+    UNIQUE KEY idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='套餐表';
+
+
+CREATE TABLE setmeal_dish (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    setmeal_id BIGINT NOT NULL COMMENT '套餐ID',
+    dish_id BIGINT NOT NULL COMMENT '菜品ID',
+    name VARCHAR(32) NOT NULL COMMENT '菜品名称',
+    price DECIMAL(10,2) NOT NULL COMMENT '菜品单价',
+    copies INT NOT NULL DEFAULT 1 COMMENT '份数',
+    PRIMARY KEY (id),
+    UNIQUE KEY idx_setmeal_dish (setmeal_id, dish_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='套餐菜品关联表';

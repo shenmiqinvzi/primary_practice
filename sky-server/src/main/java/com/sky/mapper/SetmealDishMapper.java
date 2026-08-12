@@ -11,7 +11,7 @@ import com.sky.entity.SetmealDish;
 @Mapper
 public interface SetmealDishMapper {
     @Select("select * from setmeal_dish where setmeal_id=#{setmealId}")
-    List<SetmealDish> getBySetmealId(Long SetmealId);
+    List<SetmealDish> getBySetmealId(Long setmealId);
     
     @Delete("delete from setmeal_dish where setmeal_id=#{setmealId}")
     void deleteBySetmealId(Long setmealId);

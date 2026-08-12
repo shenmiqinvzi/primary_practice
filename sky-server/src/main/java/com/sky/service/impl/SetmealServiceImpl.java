@@ -9,7 +9,6 @@ import com.sky.entity.Setmeal;
 import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import com.sky.entity.SetmealDish;
@@ -21,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sky.service.SetmealService;
+import com.sky.vo.SetmealVO;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,20 +51,25 @@ public class SetmealServiceImpl implements SetmealService {
             for(SetmealDish dish:setmealDishes){
                 dish.setSetmealId(setmeal.getId());
             }
+            setmealDishMapper.insertBatch(setmealDishes);
         }
-        setmealDishMapper.insertBatch(setmealDishes);
+        
     }
 
     @Override
     public PageResult pageQuery(SetmealPageQueryDTO dto){
         PageHelper.startPage(dto.getPage(),dto.getPageSize());
-        Page<Setmeal>page=(Page<Setmeal>)setmealMapper.pageQuery(dto);
+        Page<SetmealVO>page=(Page<SetmealVO>)setmealMapper.pageQuery(dto);
         return new PageResult(page.getTotal(), page.getResult());
     }
 
     @Override
     @Transactional
     public void deleteBatch(List<Long> ids){
+        if (ids == null || ids.isEmpty()) {
+          log.warn("删除套餐：ids 为空，不执行任何操作");
+          return;
+        }
         Integer count=setmealMapper.countByStatusAndIds(ids,StatusConstant.ENABLE);
         if(count!=null&& count>0){
             throw new BaseException("起售中的套餐不能删除，请先停售");
@@ -74,6 +79,48 @@ public class SetmealServiceImpl implements SetmealService {
             setmealDishMapper.deleteBySetmealId(id);
         }
         log.info("批量删除套餐成功，ids：{}", ids);
+    }
+
+    @Override
+    public SetmealVO getByIdWithDish(Long id){
+        Setmeal setmeal=setmealMapper.getById(id);
+        List<SetmealDish>setmealDishs=setmealDishMapper.getBySetmealId(id);
+        SetmealVO setmealVO=new SetmealVO();
+        BeanUtils.copyProperties(setmeal, setmealVO);
+        setmealVO.setSetmealDishes(setmealDishs);
+        return setmealVO;
+    }
+
+    @Override
+    @Transactional
+    public void updateWithDish(SetmealDTO setmealDTO){
+        Setmeal setmeal=new Setmeal();
+        BeanUtils.copyProperties(setmealDTO, setmeal);
+        setmeal.setUpdateTime(LocalDateTime.now());
+        setmeal.setUpdateUser(BaseContext.getCurrentId());
+        setmealMapper.update(setmeal);
+        setmealDishMapper.deleteBySetmealId(setmealDTO.getId());
+        List<SetmealDish> setmealDishs=setmealDTO.getSetmealDishes();
+        if(setmealDishs!=null&&!setmealDishs.isEmpty()){
+            for(SetmealDish dish:setmealDishs){
+                dish.setSetmealId(setmealDTO.getId());
+            }
+            setmealDishMapper.insertBatch(setmealDishs);
+        }
+        log.info("修改套餐成功，id：{}", setmealDTO.getId());
+    }
+
+    @Override
+    public void startOrStop(Integer status,Long id){
+        if (status != StatusConstant.ENABLE && status != StatusConstant.DISABLE) throw new BaseException("非法套餐状态");
+        Setmeal setmeal = Setmeal.builder()
+                .id(id)
+                .status(status)
+                .updateTime(LocalDateTime.now())
+                .updateUser(BaseContext.getCurrentId())
+                .build();
+        setmealMapper.update(setmeal);
+        log.info("修改套餐状态：id={}, status={}", id, status);
     }
         
 

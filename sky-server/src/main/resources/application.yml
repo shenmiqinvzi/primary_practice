@@ -32,12 +32,7 @@ sky:
     admin-ttl: 7200000                        # 有效期 2 小时（毫秒）
     admin-token-name: token                   # 前端存放令牌的请求头名称
     
-  alioss:
-    endpoint: oss-cn-beijing.aliyuncs.com
-    # 【重要】不要在代码里写死 AccessKey！改用环境变量，本地跑之前在 IDEA 里配好
-    access-key-id: ${OSS_ACCESS_KEY_ID:}
-    access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
-    bucket-name: heicongqiong
+
 
 
 logging:

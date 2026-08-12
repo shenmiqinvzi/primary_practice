@@ -2,6 +2,8 @@ package com.sky.mapper;
 
 import java.util.List;
 import com.sky.entity.Setmeal;
+import com.sky.vo.SetmealVO;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -9,7 +11,7 @@ import com.sky.dto.SetmealPageQueryDTO;
 
 @Mapper
 public interface SetmealMapper {
-    List<Setmeal> pageQuery(SetmealPageQueryDTO dto);
+    List<SetmealVO> pageQuery(SetmealPageQueryDTO dto);
 
     Setmeal getById(Long id);
 
