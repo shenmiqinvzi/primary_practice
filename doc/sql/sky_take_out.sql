@@ -115,3 +115,20 @@ CREATE TABLE setmeal_dish (
     PRIMARY KEY (id),
     UNIQUE KEY idx_setmeal_dish (setmeal_id, dish_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='套餐菜品关联表';
+
+
+DROP TABLE IF EXISTS user;
+
+CREATE TABLE user (
+    id           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    openid       VARCHAR(255) NOT NULL UNIQUE COMMENT '微信用户唯一标识（登录凭证）',
+    name         VARCHAR(64)  DEFAULT NULL COMMENT '用户姓名',
+    phone        VARCHAR(11)  DEFAULT NULL COMMENT '手机号',
+    sex          CHAR(1)      DEFAULT NULL COMMENT '性别：0-女 1-男',
+    id_number    VARCHAR(18)  DEFAULT NULL COMMENT '身份证号',
+    avatar       VARCHAR(255) DEFAULT NULL COMMENT '头像路径',
+    status       INT          DEFAULT 1 COMMENT '状态：1-正常 0-禁用',
+    create_time  DATETIME     DEFAULT NULL COMMENT '创建时间',
+    update_time  DATETIME     DEFAULT NULL COMMENT '更新时间',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';

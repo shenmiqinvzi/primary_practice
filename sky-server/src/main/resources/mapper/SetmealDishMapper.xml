@@ -10,4 +10,17 @@
             (#{sd.setmealId}, #{sd.dishId}, #{sd.name}, #{sd.price}, #{sd.copies})
         </foreach>
     </insert>
+
+
+    <select id="getSetmealDishVOBySetmealId" resultType="com.sky.vo.SetmealDishVO">
+        SELECT
+        sd.dish_id AS dishId,
+        sd.name,
+        sd.price,
+        sd.copies,
+        d.image
+        FROM setmeal_dish sd
+        LEFT JOIN dish d ON sd.dish_id = d.id
+        WHERE sd.setmeal_id = #{setmealId}
+    </select>
 </mapper>

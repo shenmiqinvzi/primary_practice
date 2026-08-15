@@ -2,6 +2,8 @@ package com.sky.service.impl;
 
 import org.springframework.beans.BeanUtils;   // ✅
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.StatusConstant;
@@ -18,9 +20,11 @@ import com.sky.service.DishService;
 import com.sky.vo.DishVO;
 import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +36,10 @@ public class DishServiceImpl implements DishService {
     private DishMapper dishMapper;
     @Autowired
     private DishFlavorMapper dishFlavorMapper;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private ObjectMapper objectMapper;
     @Override
     public PageResult pageQuery(DishPageQueryDTO dto){
         PageHelper.startPage(dto.getPage(), dto.getPageSize());
@@ -116,5 +124,41 @@ public class DishServiceImpl implements DishService {
                     .build();
         dishMapper.update(dish);
         log.info("菜品状态修改成功：id={}, status={}", id, status);
+    }
+
+    @Override
+    public List<DishVO> getDishListWithFlavorByCategoryId(Long categoryId){
+        String cacheKey="dish_list_"+categoryId;
+
+        String cachedJson=stringRedisTemplate.opsForValue().get(cacheKey);
+        if(cachedJson!=null&&!cachedJson.isEmpty()){
+            try{
+                List<DishVO> dishVOList=objectMapper.readValue(cachedJson,new TypeReference<List<DishVO>>() {});
+                log.info("命中缓存：{}", cacheKey);
+                return dishVOList;
+            }catch(Exception e){
+                log.warn("Redis 缓存数据解析失败，忽略缓存，查数据库", e);
+            }
+        }
+
+        List<Dish> dishList=dishMapper.getByCategoryIdAndStatus(categoryId);
+        List<DishVO> result=new ArrayList<>();
+        for(Dish dish:dishList){
+            DishVO dishVO=new DishVO();
+            BeanUtils.copyProperties(dish,dishVO);
+            dishVO.setCategoryName(null);
+            List<DishFlavor> flavors=dishFlavorMapper.getByDishId(dish.getId());
+            dishVO.setFlavors(flavors);
+            result.add(dishVO);
+        }
+        try{
+            String json=objectMapper.writeValueAsString(result);
+            stringRedisTemplate.opsForValue().set(cacheKey, json);
+            log.info("缓存写入：{}", cacheKey);
+        }catch (Exception e) {
+        log.warn("Redis 缓存写入失败", e);
+        }
+
+        return result;
     }
 }

@@ -1,4 +1,6 @@
 package com.sky.service.impl;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.StatusConstant;
@@ -16,10 +18,12 @@ import com.sky.exception.BaseException;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sky.service.SetmealService;
+import com.sky.vo.SetmealDishVO;
 import com.sky.vo.SetmealVO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +36,10 @@ public class SetmealServiceImpl implements SetmealService {
     private SetmealMapper setmealMapper;
     @Autowired
     private SetmealDishMapper setmealDishMapper;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -122,6 +130,36 @@ public class SetmealServiceImpl implements SetmealService {
         setmealMapper.update(setmeal);
         log.info("修改套餐状态：id={}, status={}", id, status);
     }
-        
+    
+    @Override
+    public List<Setmeal> getSetmealListByCategoryId(Long categoryId){
+        String cacheKey="setmeal_list_"+categoryId;
 
+        String cachedJson=stringRedisTemplate.opsForValue().get(cacheKey);
+        if(cachedJson!=null&&!cachedJson.isEmpty()){
+            try{
+                List<Setmeal> list=objectMapper.readValue(cachedJson, new TypeReference<List<Setmeal>>() {});
+                log.info("命中缓存：{}", cacheKey);
+                return list;
+            }catch (Exception e) {
+            log.warn("Redis 缓存解析失败", e);
+            }
+        }
+
+        List<Setmeal> list = setmealMapper.getByCategoryIdAndStatus(categoryId);
+        try{
+            String json=objectMapper.writeValueAsString(list);
+            stringRedisTemplate.opsForValue().set(cacheKey, json);
+            log.info("缓存写入：{}", cacheKey);
+        }catch (Exception e) {
+            log.warn("Redis 缓存写入失败", e);
+        }
+
+        return list;
+    }
+
+    @Override
+    public List<SetmealDishVO> getSetmealDishVOBySetmealId(Long setmealId){
+        return setmealDishMapper.getSetmealDishVOBySetmealId(setmealId);
+    }
 }

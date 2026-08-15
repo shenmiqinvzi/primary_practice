@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
 import com.sky.entity.SetmealDish;
+import com.sky.vo.SetmealDishVO;
 
 @Mapper
 public interface SetmealDishMapper {
@@ -17,4 +18,9 @@ public interface SetmealDishMapper {
     void deleteBySetmealId(Long setmealId);
 
     void insertBatch(List<SetmealDish> setmealDishs);
+
+    /**
+ * 用户端：根据套餐ID查询关联菜品（含图片），用于展示
+ */
+    List<SetmealDishVO> getSetmealDishVOBySetmealId(Long setmealId);
 } 
