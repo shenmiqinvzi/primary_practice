@@ -132,3 +132,18 @@ CREATE TABLE user (
     update_time  DATETIME     DEFAULT NULL COMMENT '更新时间',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+
+DROP TABLE IF EXISTS shopping_cart;
+CREATE TABLE shopping_cart (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    name VARCHAR(32) NOT NULL COMMENT '商品名称',
+    image VARCHAR(255) DEFAULT NULL COMMENT '图片路径',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    dish_id BIGINT DEFAULT NULL COMMENT '菜品ID',
+    setmeal_id BIGINT DEFAULT NULL COMMENT '套餐ID',
+    dish_flavor VARCHAR(32) DEFAULT NULL COMMENT '菜品口味',
+    number INT NOT NULL DEFAULT 1 COMMENT '数量',
+    amount DECIMAL(10,2) NOT NULL COMMENT '单价',
+    create_time DATETIME NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='购物车表';

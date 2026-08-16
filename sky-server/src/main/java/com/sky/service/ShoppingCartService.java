@@ -1,0 +1,16 @@
+package com.sky.service;
+
+import java.util.List;
+
+import com.sky.dto.ShoppingCartDTO;
+import com.sky.entity.ShoppingCart;
+
+public interface ShoppingCartService {
+    void add(ShoppingCartDTO dto);
+
+    void sub(ShoppingCartDTO dto);
+
+    void clean();
+
+    List<ShoppingCart> list();
+}
