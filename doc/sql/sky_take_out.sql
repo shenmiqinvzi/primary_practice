@@ -147,3 +147,79 @@ CREATE TABLE shopping_cart (
     create_time DATETIME NOT NULL COMMENT '创建时间',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='购物车表';
+
+-- ====================================
+-- 地址簿表
+-- ====================================
+DROP TABLE IF EXISTS address_book;
+CREATE TABLE address_book (
+    id              BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    user_id         BIGINT       NOT NULL COMMENT '用户ID',
+    consignee       VARCHAR(64)  NOT NULL COMMENT '收货人姓名',
+    sex             CHAR(1)      DEFAULT NULL COMMENT '性别：0-女 1-男',
+    phone           VARCHAR(11)  NOT NULL COMMENT '手机号',
+    province_code   VARCHAR(16)  DEFAULT NULL COMMENT '省份编码',
+    province_name   VARCHAR(64)  DEFAULT NULL COMMENT '省份名称',
+    city_code       VARCHAR(16)  DEFAULT NULL COMMENT '城市编码',
+    city_name       VARCHAR(64)  DEFAULT NULL COMMENT '城市名称',
+    district_code   VARCHAR(16)  DEFAULT NULL COMMENT '区/县编码',
+    district_name   VARCHAR(64)  DEFAULT NULL COMMENT '区/县名称',
+    detail          VARCHAR(255) NOT NULL COMMENT '详细地址',
+    label           VARCHAR(32)  DEFAULT NULL COMMENT '标签（如：家、公司）',
+    is_default      TINYINT      DEFAULT 0 COMMENT '是否默认：0-否 1-是',
+    PRIMARY KEY (id),
+    KEY idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='地址簿表';
+
+-- ====================================
+-- 订单主表
+-- ====================================
+DROP TABLE IF EXISTS orders;
+CREATE TABLE orders (
+    id                      BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    number                  VARCHAR(32)  NOT NULL COMMENT '订单号（唯一）',
+    status                  INT          NOT NULL DEFAULT 1 COMMENT '订单状态：1-待付款 2-待接单 3-已接单 4-派送中 5-已完成 6-已取消 7-退款',
+    user_id                 BIGINT       NOT NULL COMMENT '用户ID',
+    address_book_id         BIGINT       NOT NULL COMMENT '地址簿ID',
+    order_time              DATETIME     NOT NULL COMMENT '下单时间',
+    checkout_time           DATETIME     DEFAULT NULL COMMENT '结账时间',
+    pay_method              INT          DEFAULT NULL COMMENT '支付方式：1-微信 2-支付宝',
+    pay_status              INT          NOT NULL DEFAULT 0 COMMENT '支付状态：0-未支付 1-已支付 2-退款',
+    amount                  DECIMAL(10,2) NOT NULL COMMENT '订单总金额',
+    remark                  VARCHAR(255) DEFAULT NULL COMMENT '备注',
+    phone                   VARCHAR(11)  NOT NULL COMMENT '手机号（冗余）',
+    address                 VARCHAR(255) NOT NULL COMMENT '详细地址（冗余）',
+    user_name               VARCHAR(64)  DEFAULT NULL COMMENT '用户姓名（冗余）',
+    consignee               VARCHAR(64)  NOT NULL COMMENT '收货人（冗余）',
+    cancel_reason           VARCHAR(255) DEFAULT NULL COMMENT '取消原因',
+    rejection_reason        VARCHAR(255) DEFAULT NULL COMMENT '拒单原因',
+    cancel_time             DATETIME     DEFAULT NULL COMMENT '取消时间',
+    estimated_delivery_time DATETIME     DEFAULT NULL COMMENT '预计送达时间',
+    delivery_status         INT          DEFAULT NULL COMMENT '配送状态：1-待配送 2-配送中 3-已送达',
+    delivery_time           DATETIME     DEFAULT NULL COMMENT '送达时间',
+    pack_amount             DECIMAL(10,2) DEFAULT 0 COMMENT '打包费',
+    tableware_number        INT          DEFAULT 0 COMMENT '餐具数量',
+    tableware_status        INT          DEFAULT 0 COMMENT '餐具状态：0-不需要 1-需要',
+    PRIMARY KEY (id),
+    UNIQUE KEY idx_number (number),
+    KEY idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单主表';
+
+-- ====================================
+-- 订单明细表
+-- ====================================
+DROP TABLE IF EXISTS order_detail;
+CREATE TABLE order_detail (
+    id           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    order_id     BIGINT       NOT NULL COMMENT '订单ID',
+    dish_id      BIGINT       DEFAULT NULL COMMENT '菜品ID',
+    setmeal_id   BIGINT       DEFAULT NULL COMMENT '套餐ID',
+    dish_flavor  VARCHAR(32)  DEFAULT NULL COMMENT '口味',
+    name         VARCHAR(64)  NOT NULL COMMENT '商品名称（冗余）',
+    image        VARCHAR(255) DEFAULT NULL COMMENT '图片路径（冗余）',
+    number       INT          NOT NULL DEFAULT 1 COMMENT '数量',
+    amount       DECIMAL(10,2) NOT NULL COMMENT '单价',
+    PRIMARY KEY (id),
+    KEY idx_order_id (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单明细表';
+
