@@ -39,4 +39,10 @@ public interface OrderMapper {
     void cancel(Orders orders);
 
     void updateStatus(Orders update);
+
+    /**
+ * 根据订单号查询订单
+ */
+    @Select("SELECT * FROM orders WHERE number = #{orderNumber}")
+    Orders getByNumber(String orderNumber);
 }

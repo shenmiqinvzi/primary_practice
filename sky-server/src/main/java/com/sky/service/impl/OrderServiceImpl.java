@@ -4,6 +4,7 @@ import com.sky.context.BaseContext;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.sky.constant.OrderStatusConstant;
+import com.sky.constant.PayStatusConstant;
 import com.sky.dto.OrderPageQueryDTO;
 import com.sky.dto.OrderSubmitDTO;
 import com.sky.dto.OrdersDTO;
@@ -21,6 +22,7 @@ import com.sky.service.OrderService;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -124,6 +126,9 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("下单成功，订单号：{}，用户ID：{}，总金额：{}", orderNumber, userId, totalAmount);
 
+        // 下单成功后，推送来单提醒
+        WebSocketServer.sendToAll("来单提醒：" + orderNumber);
+        log.info("下单成功，订单号：{}，用户ID：{}，总金额：{}", orderNumber, userId, totalAmount);
         // 10. 组装返回结果
         return OrderSubmitVO.builder()
                 .id(orderId)
@@ -271,5 +276,29 @@ public class OrderServiceImpl implements OrderService {
         update.setStatus(OrderStatusConstant.COMPLETED);
         orderMapper.updateStatus(update);
         log.info("完成成功，订单ID：{}", id);
+    }
+
+    @Override
+    @Transactional
+    public void payment(String orderNumber){
+        Orders orders=orderMapper.getByNumber(orderNumber);
+        if(orders==null) throw new BaseException("订单不存在");
+
+        if (!orders.getStatus().equals(OrderStatusConstant.PENDING_PAYMENT)) {
+            throw new BaseException("当前订单状态不允许支付");
+        }
+        Orders update=new Orders();
+        update.setId(orders.getId());
+        update.setStatus(OrderStatusConstant.TO_BE_CONFIRMED);  // 待付款 → 待接单
+        update.setPayStatus(PayStatusConstant.PAID);                                 // 未支付 → 已支付
+        update.setCheckoutTime(LocalDateTime.now());
+        orderMapper.updateStatus(update);
+
+        log.info("支付成功：订单号={}", orderNumber);
+
+    // 4. WebSocket 推送来单提醒（管理端）
+        String message = "来单提醒：" + orderNumber;
+        WebSocketServer.sendToAll(message);
+        log.info("WebSocket 推送来单提醒：{}", message);
     }
 }

@@ -30,4 +30,6 @@ public interface OrderService {
     void complete(Long id);
 
     void rejection(OrdersDTO dto);
+
+    void payment(String orderNumber);
 }
