@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.OrderMapper">
+
+    <!-- 分页条件查询 -->
+    <select id="pageQuery" resultType="com.sky.entity.Orders">
+        SELECT * FROM orders
+        <where>
+            <if test="number != null and number != ''">
+                AND number = #{number}
+            </if>
+            <if test="phone != null and phone != ''">
+                AND phone LIKE CONCAT('%', #{phone}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="beginTime != null">
+                AND order_time &gt;= #{beginTime}
+            </if>
+            <if test="endTime != null">
+                AND order_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY order_time DESC
+    </select>
+
+    <!-- 根据ID查询订单 -->
+    <select id="getById" resultType="com.sky.entity.Orders">
+        SELECT * FROM orders WHERE id = #{id}
+    </select>
+
+    <!-- 统计各状态订单数量（CASE WHEN 写法） -->
+    <select id="countByStatus" resultType="com.sky.vo.OrderStatisticsVO">
+        SELECT
+            COUNT(CASE WHEN status = 2 THEN 1 END) AS toBeConfirmed,
+            COUNT(CASE WHEN status = 3 THEN 1 END) AS confirmed,
+            COUNT(CASE WHEN status = 4 THEN 1 END) AS deliveryInProgress
+        FROM orders
+    </select>
+
+    <!-- 更新订单状态（通用，含原因和时间） -->
+    <update id="updateStatus">
+        UPDATE orders
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="rejectionReason != null">rejection_reason = #{rejectionReason},</if>
+            <if test="cancelReason != null">cancel_reason = #{cancelReason},</if>
+            <if test="cancelTime != null">cancel_time = #{cancelTime},</if>
+            <if test="checkoutTime != null">checkout_time = #{checkoutTime},</if>
+            <if test="deliveryTime != null">delivery_time = #{deliveryTime},</if>
+            <if test="deliveryStatus != null">delivery_status = #{deliveryStatus},</if>
+            <if test="estimatedDeliveryTime != null">estimated_delivery_time = #{estimatedDeliveryTime},</if>
+            <if test="payStatus != null">pay_status = #{payStatus}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 拒单（专用，更新状态+拒单原因+拒单时间） -->
+    <update id="reject">
+        UPDATE orders
+        SET status = 7,
+            rejection_reason = #{rejectionReason},
+            cancel_time = #{cancelTime}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 取消（专用，更新状态+取消原因+取消时间） -->
+    <update id="cancel">
+        UPDATE orders
+        SET status = 6,
+            cancel_reason = #{cancelReason},
+            cancel_time = #{cancelTime}
+        WHERE id = #{id}
+    </update>
+</mapper>

@@ -1,6 +1,11 @@
 package com.sky.mapper;
 
+import com.sky.dto.OrderPageQueryDTO;
 import com.sky.entity.Orders;
+import com.sky.vo.OrderStatisticsVO;
+
+import java.util.List;
+
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
@@ -22,4 +27,16 @@ public interface OrderMapper {
             "#{deliveryStatus}, #{deliveryTime}, #{packAmount}, #{tablewareNumber}, #{tablewareStatus})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(Orders orders);
+
+    List<Orders> pageQuery(OrderPageQueryDTO dto);
+
+    Orders getById(Long id);
+
+    OrderStatisticsVO countByStatus();
+
+    void reject(Orders orders);
+
+    void cancel(Orders orders);
+
+    void updateStatus(Orders update);
 }

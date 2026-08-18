@@ -1,8 +1,12 @@
 package com.sky.service.impl;
 
 import com.sky.context.BaseContext;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.sky.constant.OrderStatusConstant;
+import com.sky.dto.OrderPageQueryDTO;
 import com.sky.dto.OrderSubmitDTO;
+import com.sky.dto.OrdersDTO;
 import com.sky.entity.AddressBook;
 import com.sky.entity.OrderDetail;
 import com.sky.entity.Orders;
@@ -12,8 +16,12 @@ import com.sky.mapper.AddressBookMapper;
 import com.sky.mapper.OrderDetailMapper;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.ShoppingCartMapper;
+import com.sky.result.PageResult;
 import com.sky.service.OrderService;
+import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -122,5 +131,145 @@ public class OrderServiceImpl implements OrderService {
                 .orderAmount(totalAmount)
                 .orderTime(orders.getOrderTime())
                 .build();
+    }
+
+    @Override
+    public PageResult pageQuery(OrderPageQueryDTO dto){
+        PageHelper.startPage(dto.getPage(),dto.getPageSize());
+        List<Orders> list=orderMapper.pageQuery(dto);
+        PageInfo<Orders> pageInfo=new PageInfo<>(list);
+
+        List<OrderVO> voList=list.stream().map(order->{
+            OrderVO vo=new OrderVO();
+            BeanUtils.copyProperties(order,vo);
+            List<OrderDetail>details=orderDetailMapper.getByOrderId(order.getId());
+            String orderDishes=details.stream()
+                                .map(d->d.getName()+"x"+d.getNumber())
+                                .collect(Collectors.joining(","));
+            vo.setOrderDishes(orderDishes);
+            return vo;
+        }).collect(Collectors.toList());
+
+        return new PageResult(pageInfo.getTotal(), voList);
+    }
+
+    @Override
+    public OrderVO getDetail(Long id){
+        Orders order=orderMapper.getById(id);
+        if(order==null) throw new BaseException("订单不存在");
+        List<OrderDetail>details=orderDetailMapper.getByOrderId(id);
+
+        OrderVO vo=new OrderVO();
+        BeanUtils.copyProperties(order, vo);
+        vo.setOrderDetailList(details);
+        return vo;
+    }
+
+    @Override
+    public OrderStatisticsVO statistics(){
+        return orderMapper.countByStatus();
+    }
+
+    @Override
+    @Transactional
+    public void confirm(OrdersDTO dto){
+        Orders order=orderMapper.getById(dto.getId());
+        if(order==null) throw new BaseException("订单不存在");
+        if(!order.getStatus().equals(OrderStatusConstant.TO_BE_CONFIRMED)) throw new BaseException("当前状态不允许接单");
+        Orders update=new Orders();
+        update.setId(dto.getId());
+        update.setStatus(OrderStatusConstant.CONFIRMED);
+        orderMapper.updateStatus(update);
+    }
+
+    @Override
+    @Transactional
+    public void rejection(OrdersDTO dto) {
+        Orders order = orderMapper.getById(dto.getId());
+        if (order == null) {
+            throw new BaseException("订单不存在");
+        }
+        // 校验状态：只有待接单(2)才能拒单
+        if (!order.getStatus().equals(OrderStatusConstant.TO_BE_CONFIRMED)) {
+            throw new BaseException("当前订单状态不允许拒单");
+        }
+        if (dto.getRejectionReason() == null || dto.getRejectionReason().isEmpty()) {
+            throw new BaseException("拒单原因不能为空");
+        }
+
+        Orders update = new Orders();
+        update.setId(dto.getId());
+        update.setStatus(OrderStatusConstant.REFUND);
+        update.setRejectionReason(dto.getRejectionReason());
+        update.setCancelTime(LocalDateTime.now());
+        orderMapper.reject(update);
+        log.info("拒单成功，订单ID：{}，原因：{}", dto.getId(), dto.getRejectionReason());
+    }
+
+
+    @Override
+    @Transactional
+    public void cancel(OrdersDTO dto) {
+        Orders order = orderMapper.getById(dto.getId());
+        if (order == null) {
+            throw new BaseException("订单不存在");
+        }
+        // 校验状态：只有待接单(2)或已接单(3)才能取消
+        if (!order.getStatus().equals(OrderStatusConstant.TO_BE_CONFIRMED)
+                && !order.getStatus().equals(OrderStatusConstant.CONFIRMED)) {
+            throw new BaseException("当前订单状态不允许取消");
+        }
+        if (dto.getCancelReason() == null || dto.getCancelReason().isEmpty()) {
+            throw new BaseException("取消原因不能为空");
+        }
+
+        Orders update = new Orders();
+        update.setId(dto.getId());
+        update.setStatus(OrderStatusConstant.CANCELLED);
+        update.setCancelReason(dto.getCancelReason());
+        update.setCancelTime(LocalDateTime.now());
+        orderMapper.cancel(update);
+        log.info("取消成功，订单ID：{}，原因：{}", dto.getId(), dto.getCancelReason());
+    }
+
+    @Override
+    @Transactional
+    public void delivery(Long id) {
+        Orders order = orderMapper.getById(id);
+        if (order == null) {
+            throw new BaseException("订单不存在");
+        }
+        // 校验状态：只有已接单(3)才能派送
+        if (!order.getStatus().equals(OrderStatusConstant.CONFIRMED)) {
+            throw new BaseException("当前订单状态不允许派送");
+        }
+
+        Orders update = new Orders();
+        update.setId(id);
+        update.setStatus(OrderStatusConstant.DELIVERY_IN_PROGRESS);
+        update.setDeliveryStatus(1); // 待配送 → 配送中
+        update.setDeliveryTime(LocalDateTime.now());
+        orderMapper.updateStatus(update);
+        log.info("派送成功，订单ID：{}", id);
+    }
+
+
+    @Override
+    @Transactional
+    public void complete(Long id) {
+        Orders order = orderMapper.getById(id);
+        if (order == null) {
+            throw new BaseException("订单不存在");
+        }
+        // 校验状态：只有派送中(4)才能完成
+        if (!order.getStatus().equals(OrderStatusConstant.DELIVERY_IN_PROGRESS)) {
+            throw new BaseException("当前订单状态不允许完成");
+        }
+
+        Orders update = new Orders();
+        update.setId(id);
+        update.setStatus(OrderStatusConstant.COMPLETED);
+        orderMapper.updateStatus(update);
+        log.info("完成成功，订单ID：{}", id);
     }
 }
