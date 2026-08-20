@@ -74,4 +74,31 @@
             cancel_time = #{cancelTime}
         WHERE id = #{id}
     </update>
+
+
+    <!-- 用户端历史订单分页查询 -->
+<select id="pageQueryByUser" resultType="com.sky.entity.Orders">
+    SELECT * FROM orders
+    <where>
+        <if test="userId != null">
+            AND user_id = #{userId}
+        </if>
+        <if test="number != null and number != ''">
+            AND number = #{number}
+        </if>
+        <if test="phone != null and phone != ''">
+            AND phone LIKE CONCAT('%', #{phone}, '%')
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        <if test="beginTime != null">
+            AND order_time &gt;= #{beginTime}
+        </if>
+        <if test="endTime != null">
+            AND order_time &lt;= #{endTime}
+        </if>
+    </where>
+    ORDER BY order_time DESC
+</select>
 </mapper>

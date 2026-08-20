@@ -1,6 +1,7 @@
 package com.sky.service.impl;
 
 import com.sky.context.BaseContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.sky.constant.OrderStatusConstant;
@@ -33,7 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -301,4 +304,94 @@ public class OrderServiceImpl implements OrderService {
         WebSocketServer.sendToAll(message);
         log.info("WebSocket 推送来单提醒：{}", message);
     }
+
+    @Override
+    public PageResult pageQueryByUser(OrderPageQueryDTO dto){
+        dto.setUserId(BaseContext.getCurrentId());
+        PageHelper.startPage(dto.getPage(),dto.getPageSize());
+        List<Orders>list=orderMapper.pageQueryByUser(dto);
+        PageInfo<Orders>pageInfo=new PageInfo<>(list);
+        List<OrderVO> voList=list.stream().map(order->{
+            OrderVO vo=new OrderVO();
+            BeanUtils.copyProperties(order, vo);
+            List<OrderDetail>details=orderDetailMapper.getByOrderId(order.getId());
+            vo.setOrderDetailList(details);
+            return vo;
+        }).collect(Collectors.toList());
+        return new PageResult(pageInfo.getTotal(), voList);
+    }
+
+    @Override
+    public OrderVO getUserOrderDetail(Long id){
+        Orders order=orderMapper.getById(id);
+        if (order == null) {
+        throw new BaseException("订单不存在");
+    }
+
+    // 2. 越权校验：当前用户只能看自己的订单
+    Long currentUserId = BaseContext.getCurrentId();
+    if (!currentUserId.equals(order.getUserId())) {
+        throw new BaseException("无权查看该订单");
+    
+    }
+    List<OrderDetail>details=orderDetailMapper.getByOrderId(id);
+    OrderVO vo=new OrderVO();
+    BeanUtils.copyProperties(order, vo);
+    vo.setOrderDetailList(details);
+    return vo;
+  }
+
+  @Override
+  @Transactional
+  public void userCancel(OrdersDTO dto){
+    Orders order=orderMapper.getById(dto.getId());
+    if (order == null) {
+        throw new BaseException("订单不存在");
+    }
+
+    // 越权校验：只能取消自己的订单
+    Long currentUserId = BaseContext.getCurrentId();
+    if (!currentUserId.equals(order.getUserId())) {
+        throw new BaseException("无权操作该订单");
+    }
+
+    // 2. 校验状态：只有待付款(1)能用户取消
+    if (!order.getStatus().equals(OrderStatusConstant.PENDING_PAYMENT)) {
+        throw new BaseException("当前订单状态不允许取消");
+    }
+    Orders update = new Orders();
+    update.setId(dto.getId());
+    update.setStatus(OrderStatusConstant.CANCELLED);
+    update.setCancelReason("用户取消");
+    update.setCancelTime(LocalDateTime.now());
+    orderMapper.updateStatus(update);
+
+    log.info("用户取消订单成功，订单号：{}", order.getNumber());
+  }
+
+  @Override
+   public void reminder(Long id) {
+    // 1. 查订单
+    Orders order = orderMapper.getById(id);
+    if (order == null) {
+        throw new BaseException("订单不存在");
+    }
+
+    // 2. 组装 JSON 消息（对接黑马前端协议）
+    Map<String, Object> message = new HashMap<>();
+    message.put("type", 2);          // type=2 表示催单
+    message.put("orderId", id);
+    message.put("content", "订单号：" + order.getNumber());
+
+    String jsonMessage = "";
+    try {
+        jsonMessage = new ObjectMapper().writeValueAsString(message);
+    } catch (Exception e) {
+        throw new BaseException("催单消息序列化失败");
+    }
+    WebSocketServer.sendToAll(jsonMessage);
+
+    log.info("催单消息已推送，订单号：{}", order.getNumber());
+  }
+
 }

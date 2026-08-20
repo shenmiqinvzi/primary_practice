@@ -11,6 +11,7 @@ public class OrderPageQueryDTO implements Serializable {
     private Integer page;         // 页码
     private Integer pageSize;     // 每页条数
 
+    private Long userId;
     private String number;        // 订单号
     private String phone;         // 手机号
     private Integer status;       // 订单状态

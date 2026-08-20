@@ -117,4 +117,6 @@ public interface OrderMapper {
                 "from user where create_time between #{begin} and #{end}"+
                 "group by date(create_time)")
     List<Map<String,Object>> getNewUserByDate(@Param("begin") LocalDateTime begin,@Param("end") LocalDateTime end);
+
+        List<Orders> pageQueryByUser(OrderPageQueryDTO dto);
 }

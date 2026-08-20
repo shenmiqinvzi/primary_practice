@@ -32,4 +32,12 @@ public interface OrderService {
     void rejection(OrdersDTO dto);
 
     void payment(String orderNumber);
+
+    PageResult pageQueryByUser(OrderPageQueryDTO dto);
+
+    OrderVO getUserOrderDetail(Long id);
+
+    void userCancel(OrdersDTO dto);
+
+    void reminder(Long id);
 }
