@@ -1,0 +1,20 @@
+<view class="page">
+  <view wx:if="{{!items.length}}" class="empty">购物车还是空的</view>
+
+  <view wx:for="{{items}}" wx:key="id" class="card row">
+    <view class="name">
+      {{item.name}}
+      <text wx:if="{{item.dishFlavor}}">（{{item.dishFlavor}}）</text>
+    </view>
+    <view class="actions">
+      <button size="mini" data-item="{{item}}" data-add="false" bindtap="change">-</button>
+      <text>{{item.number}}</text>
+      <button size="mini" data-item="{{item}}" data-add="true" bindtap="change">+</button>
+    </view>
+  </view>
+
+  <view wx:if="{{items.length}}" class="footer">
+    <text>合计：¥{{total}}</text>
+    <button class="primary" bindtap="clean">清空购物车</button>
+  </view>
+</view>

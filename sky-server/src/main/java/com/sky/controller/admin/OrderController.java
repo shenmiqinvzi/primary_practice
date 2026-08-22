@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
+@RestController("adminOrderController")
 @RequestMapping("/admin/order")
 @Api(tags = "管理端订单接口")
 @Slf4j

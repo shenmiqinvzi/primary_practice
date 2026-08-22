@@ -1,0 +1,1 @@
+<view class="page login"><view class="title">苍穹外卖</view><view class="sub">登录后即可开始点餐</view><button class="primary" loading="{{loading}}" bindtap="login">微信授权登录</button></view>

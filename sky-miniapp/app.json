@@ -1,0 +1,5 @@
+{
+  "pages": ["pages/login/login", "pages/index/index", "pages/cart/cart", "pages/order/order"],
+  "window": { "navigationBarTitleText": "苍穹外卖", "navigationBarBackgroundColor": "#ffffff", "backgroundColor": "#f5f7fa" },
+  "tabBar": { "color": "#666666", "selectedColor": "#409eff", "list": [{ "pagePath": "pages/index/index", "text": "点餐" }, { "pagePath": "pages/cart/cart", "text": "购物车" }, { "pagePath": "pages/order/order", "text": "订单" }] }
+}

@@ -1,8 +1,20 @@
 <template>
-  <el-container>
-    <!-- 左侧菜单 -->
-    <el-aside width="200px">
-      <el-menu router>
+  <el-container class="layout">
+    <el-aside width="220px" class="aside">
+      <div class="brand">
+        苍穹外卖
+        <small>管理端</small>
+      </div>
+
+      <el-menu
+        router
+        :default-active="$route.path"
+        class="menu"
+        background-color="#001529"
+        text-color="#bfcbd9"
+        active-text-color="#fff"
+      >
+        <el-menu-item index="/dashboard">工作台</el-menu-item>
         <el-menu-item index="/employee">员工管理</el-menu-item>
         <el-menu-item index="/category">分类管理</el-menu-item>
         <el-menu-item index="/dish">菜品管理</el-menu-item>
@@ -11,13 +23,12 @@
         <el-menu-item index="/report">数据统计</el-menu-item>
       </el-menu>
     </el-aside>
+
     <el-container>
-      <!-- 顶部栏 -->
-      <el-header>
-        <span>苍穹外卖后台</span>
-        <el-button @click="logout">退出</el-button>
+      <el-header class="header">
+        <span>欢迎回来，管理员</span>
+        <el-button link @click="logout">退出登录</el-button>
       </el-header>
-      <!-- 内容区（子路由渲染到这里） -->
       <el-main>
         <router-view />
       </el-main>
@@ -34,6 +45,15 @@ const userStore = useUserStore()
 
 const logout = () => {
   userStore.clearToken()
-  router.push('/login')
+  router.replace('/login')
 }
 </script>
+
+<style scoped>
+.layout { min-height: 100vh; }
+.aside { background: #001529; }
+.brand { height: 60px; color: #fff; font-size: 20px; font-weight: 700; display: flex; align-items: center; padding: 0 22px; }
+.brand small { font-size: 12px; margin-left: 8px; color: #91a4b7; }
+.menu { border: 0; }
+.header { background: #fff; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+</style>

@@ -1,0 +1,28 @@
+<view class="page">
+  <view class="card status {{open ? 'open' : 'closed'}}">
+    {{open ? '店铺营业中' : '店铺已打烊'}}
+  </view>
+
+  <scroll-view scroll-x class="tabs">
+    <view
+      wx:for="{{categories}}"
+      wx:key="id"
+      class="tab {{activeCategoryId === item.id ? 'active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="loadDishes"
+    >
+      {{item.name}}
+    </view>
+  </scroll-view>
+
+  <view wx:for="{{goods}}" wx:key="id" class="card dish">
+    <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" />
+    <view class="info">
+      <view>{{item.name}}</view>
+      <view class="price">¥{{item.price}}</view>
+    </view>
+    <button class="primary mini" data-id="{{item.id}}" bindtap="addCart">
+      加入
+    </button>
+  </view>
+</view>

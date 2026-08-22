@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@RestController("userOrderSubmitController")
 @RequestMapping("/user/order")
 @Api(tags = "用户端订单接口")
 @Slf4j
