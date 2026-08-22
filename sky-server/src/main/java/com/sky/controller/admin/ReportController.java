@@ -66,8 +66,10 @@ public class ReportController {
 
     @GetMapping("/export")
     @ApiOperation("导出 Excel 报表")
-    public void export(HttpServletResponse response) {
+    public void export(HttpServletResponse response,
+                       @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
+                       @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
         log.info("导出 Excel 报表");
-        reportService.exportExcel(response);
+        reportService.exportExcel(response, begin, end);
     }
 }

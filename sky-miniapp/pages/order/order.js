@@ -35,6 +35,15 @@ Page({
     this.onShow()
   },
 
+  detail(event) {
+    wx.navigateTo({ url: `/pages/order-detail/order-detail?id=${event.currentTarget.dataset.id}` })
+  },
+
+  pay(event) {
+    const order = event.currentTarget.dataset.order
+    wx.navigateTo({ url: `/pages/pay/pay?id=${order.id}&orderNumber=${order.number}&amount=${order.amount}` })
+  },
+
   async reminder(event) {
     await request({
       url: `/user/order/reminder/${event.currentTarget.dataset.id}`

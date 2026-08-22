@@ -53,8 +53,7 @@ public class AddressBookServiceImpl implements AddressBookService {
 
     @Override
     public AddressBook getById(Long id) {
-        AddressBook addressBook = addressBookMapper.getById(id);
-        // 简单校验：地址是否存在，后续可以加上权限校验（该地址是否属于当前用户）
+        AddressBook addressBook = addressBookMapper.getByIdAndUserId(id, BaseContext.getCurrentId());
         if (addressBook == null) {
             throw new BaseException("地址不存在");
         }
@@ -63,8 +62,11 @@ public class AddressBookServiceImpl implements AddressBookService {
 
     @Override
     public void update(AddressBookDTO dto) {
+        Long userId = BaseContext.getCurrentId();
+        if (addressBookMapper.getByIdAndUserId(dto.getId(), userId) == null) throw new BaseException("地址不存在或无权操作");
         AddressBook addressBook = new AddressBook();
         BeanUtils.copyProperties(dto, addressBook);
+        addressBook.setUserId(userId);
         addressBookMapper.update(addressBook);
         log.info("修改地址成功：{}", addressBook);
     }
@@ -72,11 +74,12 @@ public class AddressBookServiceImpl implements AddressBookService {
     @Override
     public void deleteById(Long id) {
         // 校验地址是否存在
-        AddressBook addressBook = addressBookMapper.getById(id);
+        Long userId = BaseContext.getCurrentId();
+        AddressBook addressBook = addressBookMapper.getByIdAndUserId(id, userId);
         if (addressBook == null) {
             throw new BaseException("地址不存在，无法删除");
         }
-        addressBookMapper.deleteById(id);
+        addressBookMapper.deleteById(id, userId);
         log.info("删除地址成功：id={}", id);
     }
 
@@ -86,7 +89,7 @@ public class AddressBookServiceImpl implements AddressBookService {
         Long userId = BaseContext.getCurrentId();
 
         // 1. 校验要设置的地址是否存在
-        AddressBook addressBook = addressBookMapper.getById(id);
+        AddressBook addressBook = addressBookMapper.getByIdAndUserId(id, userId);
         if (addressBook == null) {
             throw new BaseException("地址不存在，无法设为默认");
         }
@@ -95,7 +98,7 @@ public class AddressBookServiceImpl implements AddressBookService {
         addressBookMapper.clearDefaultByUserId(userId);
 
         // 3. 将指定地址设为默认（is_default = 1）
-        addressBookMapper.setDefaultById(id);
+        addressBookMapper.setDefaultById(id, userId);
 
         log.info("设置默认地址成功：userId={}, addressId={}", userId, id);
     }

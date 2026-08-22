@@ -1,0 +1,5 @@
+<view class="page pay-page">
+  <view class="card"><view class="title">待支付</view><view class="number">订单号：{{orderNumber}}</view><view class="amount">¥{{amount}}</view></view>
+  <button class="primary" loading="{{loading}}" bindtap="pay">模拟微信支付</button>
+  <button bindtap="later">稍后支付</button>
+</view>

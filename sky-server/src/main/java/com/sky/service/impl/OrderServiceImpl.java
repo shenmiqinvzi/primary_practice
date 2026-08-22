@@ -59,7 +59,7 @@ public class OrderServiceImpl implements OrderService {
         Long userId = BaseContext.getCurrentId();
 
         // 1. 查询地址簿（校验是否存在，并取收货信息）
-        AddressBook addressBook = addressBookMapper.getById(dto.getAddressBookId());
+        AddressBook addressBook = addressBookMapper.getByIdAndUserId(dto.getAddressBookId(), userId);
         if (addressBook == null) {
             throw new BaseException("地址不存在，请重新选择");
         }
@@ -286,6 +286,7 @@ public class OrderServiceImpl implements OrderService {
     public void payment(String orderNumber){
         Orders orders=orderMapper.getByNumber(orderNumber);
         if(orders==null) throw new BaseException("订单不存在");
+        if (!BaseContext.getCurrentId().equals(orders.getUserId())) throw new BaseException("无权操作该订单");
 
         if (!orders.getStatus().equals(OrderStatusConstant.PENDING_PAYMENT)) {
             throw new BaseException("当前订单状态不允许支付");
@@ -370,11 +371,17 @@ public class OrderServiceImpl implements OrderService {
   }
 
   @Override
-   public void reminder(Long id) {
+  public void reminder(Long id) {
     // 1. 查订单
     Orders order = orderMapper.getById(id);
     if (order == null) {
         throw new BaseException("订单不存在");
+    }
+    if (!BaseContext.getCurrentId().equals(order.getUserId())) {
+        throw new BaseException("无权操作该订单");
+    }
+    if (!OrderStatusConstant.CONFIRMED.equals(order.getStatus())) {
+        throw new BaseException("当前订单状态不允许催单");
     }
 
     // 2. 组装 JSON 消息（对接黑马前端协议）

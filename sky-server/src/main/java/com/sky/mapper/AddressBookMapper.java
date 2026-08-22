@@ -17,8 +17,8 @@ public interface AddressBookMapper {
     /**
      * 根据ID查询地址
      */
-    @Select("select * from address_book where id = #{id}")
-    AddressBook getById(Long id);
+    @Select("select * from address_book where id = #{id} and user_id = #{userId}")
+    AddressBook getByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
     /**
      * 查询当前用户的默认地址
@@ -44,7 +44,7 @@ public interface AddressBookMapper {
             "city_code = #{cityCode}, city_name = #{cityName}, " +
             "district_code = #{districtCode}, district_name = #{districtName}, " +
             "detail = #{detail}, label = #{label}, is_default = #{isDefault} " +
-            "where id = #{id}")
+            "where id = #{id} and user_id = #{userId}")
     void update(AddressBook addressBook);
 
     /**
@@ -56,12 +56,12 @@ public interface AddressBookMapper {
     /**
      * 将指定地址设为默认（is_default = 1）
      */
-    @Update("update address_book set is_default = 1 where id = #{id}")
-    void setDefaultById(Long id);
+    @Update("update address_book set is_default = 1 where id = #{id} and user_id = #{userId}")
+    void setDefaultById(@Param("id") Long id, @Param("userId") Long userId);
 
     /**
      * 删除地址
      */
-    @Delete("delete from address_book where id = #{id}")
-    void deleteById(Long id);
+    @Delete("delete from address_book where id = #{id} and user_id = #{userId}")
+    void deleteById(@Param("id") Long id, @Param("userId") Long userId);
 }

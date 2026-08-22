@@ -9,19 +9,20 @@
       wx:key="id"
       class="tab {{activeCategoryId === item.id ? 'active' : ''}}"
       data-id="{{item.id}}"
-      bindtap="loadDishes"
+      data-type="{{item.type}}"
+      bindtap="loadGoods"
     >
       {{item.name}}
     </view>
   </scroll-view>
 
-  <view wx:for="{{goods}}" wx:key="id" class="card dish">
+  <view wx:for="{{goods}}" wx:key="id" class="card dish" data-item="{{item}}" bindtap="openDetail">
     <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" />
     <view class="info">
       <view>{{item.name}}</view>
       <view class="price">¥{{item.price}}</view>
     </view>
-    <button class="primary mini" data-id="{{item.id}}" bindtap="addCart">
+    <button class="primary mini" data-item="{{item}}" catchtap="addCart">
       加入
     </button>
   </view>

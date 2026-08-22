@@ -81,6 +81,11 @@ export const setmealApi = {
     method: 'delete',
     params: { ids: ids.join(',') }
   }),
+  upload: (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request({ url: '/admin/common/upload', method: 'post', data: form })
+  },
   changeStatus: (status, id) => request({
     url: `/admin/setmeal/status/${status}`,
     method: 'post',
@@ -113,5 +118,6 @@ export const reportApi = {
   turnover: (params) => getPage('/admin/report/turnoverStatistics', params),
   users: (params) => getPage('/admin/report/userStatistics', params),
   orders: (params) => getPage('/admin/report/ordersStatistics', params),
-  top10: (params) => getPage('/admin/report/top10', params)
+  top10: (params) => getPage('/admin/report/top10', params),
+  export: (params) => request({ url: '/admin/report/export', method: 'get', params, responseType: 'blob' })
 }

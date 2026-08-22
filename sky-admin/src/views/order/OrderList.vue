@@ -21,6 +21,7 @@
           <el-button link type="primary" @click="showDetail(row)">详情</el-button>
           <el-button v-if="row.status === 2" link type="success" @click="action('confirm', row.id)">接单</el-button>
           <el-button v-if="row.status === 2" link type="danger" @click="action('rejection', row.id)">拒单</el-button>
+          <el-button v-if="row.status === 2 || row.status === 3" link type="warning" @click="cancel(row.id)">取消</el-button>
           <el-button v-if="row.status === 3" link type="primary" @click="deliver(row.id)">派送</el-button>
           <el-button v-if="row.status === 4" link type="success" @click="complete(row.id)">完成</el-button>
         </template>
@@ -47,7 +48,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { orderApi } from '@/api'
 
@@ -66,8 +67,22 @@ const statusName = (status) => statusOptions.find((item) => item.value === statu
 const load = async () => { loading.value = true; try { const result = await orderApi.page(query.value); rows.value = result?.records || []; total.value = result?.total || 0 } finally { loading.value = false } }
 const showDetail = async (row) => { detail.value = await orderApi.detail(row.id); drawer.value = true }
 const action = async (name, id) => { const prompt = name === 'rejection' ? await ElMessageBox.prompt('请输入拒单原因', '拒单') : null; await orderApi.action(name, { id, rejectionReason: prompt?.value }); ElMessage.success('操作成功'); load() }
+const cancel = async (id) => { const prompt = await ElMessageBox.prompt('请输入取消原因', '取消订单'); await orderApi.action('cancel', { id, cancelReason: prompt.value }); ElMessage.success('订单已取消'); load() }
 const deliver = async (id) => { await orderApi.delivery(id); ElMessage.success('已开始派送'); load() }
 const complete = async (id) => { await orderApi.complete(id); ElMessage.success('订单已完成'); load() }
 
-onMounted(load)
+let socket
+const connectWebSocket = () => {
+  const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
+  socket = new WebSocket(`${protocol}://${location.host.replace(/:\d+$/, ':8080')}/ws/1`)
+  socket.onmessage = event => {
+    let message = event.data
+    try { message = JSON.parse(event.data) } catch {}
+    ElMessage.info(message?.type === 2 ? '顾客正在催单' : '收到新订单，请及时处理')
+    load()
+  }
+}
+
+onMounted(() => { load(); connectWebSocket() })
+onBeforeUnmount(() => socket?.close())
 </script>

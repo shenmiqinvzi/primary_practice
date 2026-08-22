@@ -1,0 +1,13 @@
+<view class="page" wx:if="{{dish}}">
+  <image wx:if="{{dish.image}}" class="hero" src="{{dish.image}}" mode="aspectFill" />
+  <view class="card">
+    <view class="title">{{dish.name}}</view>
+    <view class="price">¥{{dish.price}}</view>
+    <view class="muted">{{dish.description || '美味现做，欢迎品尝'}}</view>
+  </view>
+  <view class="card" wx:if="{{dish.flavors && dish.flavors.length}}">
+    <view class="section-title">口味备注</view>
+    <input placeholder="例如：微辣、少葱" value="{{flavor}}" bindinput="inputFlavor" />
+  </view>
+  <button class="primary" bindtap="addCart">加入购物车</button>
+</view>

@@ -1,0 +1,11 @@
+<view class="page">
+  <view class="card address-card" bindtap="chooseAddress">
+    <view wx:if="{{address}}"><view class="address-head">{{address.consignee}} {{address.phone}}</view><view>{{address.detail}}</view></view>
+    <view wx:else class="empty">请选择收货地址</view>
+  </view>
+  <view class="card">
+    <view wx:for="{{items}}" wx:key="id" class="row"><text>{{item.name}} × {{item.number}}</text><text>¥{{(item.amount * item.number).toFixed(2)}}</text></view>
+    <textarea placeholder="订单备注（选填）" value="{{remark}}" bindinput="inputRemark" />
+  </view>
+  <view class="submit-bar"><text>合计：¥{{total}}</text><button class="primary" size="mini" bindtap="submit">提交订单</button></view>
+</view>

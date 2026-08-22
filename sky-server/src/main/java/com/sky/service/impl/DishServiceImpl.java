@@ -69,12 +69,18 @@ public class DishServiceImpl implements DishService {
     @Override
     public void deleteBatch(List<Long> ids){
         if(ids==null||ids.isEmpty()) return;
+        List<Long> categoryIds = new ArrayList<>();
+        for (Long id : ids) {
+            Dish old = dishMapper.getById(id);
+            if (old != null && old.getCategoryId() != null) categoryIds.add(old.getCategoryId());
+        }
         Integer count=dishMapper.countByStatusAndIds(ids, StatusConstant.ENABLE);
         if(count!=null&&count>0){
             throw new BaseException("起售中的菜品不可以删除，请先停售");
         }
 
         dishMapper.deleteByIds(ids);
+        categoryIds.forEach(id -> stringRedisTemplate.delete("dish_list_" + id));
         log.info("批量删除菜品成功，ids: {}", ids);
         
     }
@@ -92,6 +98,7 @@ public class DishServiceImpl implements DishService {
     @Override
     @Transactional
     public void updateWithFlavor(DishDTO dishDTO){
+        Dish old = dishMapper.getById(dishDTO.getId());
         Dish dish=new Dish();
         BeanUtils.copyProperties(dishDTO, dish);
 
@@ -109,6 +116,8 @@ public class DishServiceImpl implements DishService {
             }
             dishFlavorMapper.insertBatch(flavors);
         }
+        if (old != null && old.getCategoryId() != null) stringRedisTemplate.delete("dish_list_" + old.getCategoryId());
+        if (dishDTO.getCategoryId() != null) stringRedisTemplate.delete("dish_list_" + dishDTO.getCategoryId());
         log.info("修改菜品成功，ID:{}",dishDTO.getId());
     }
 
@@ -123,6 +132,8 @@ public class DishServiceImpl implements DishService {
                     .updateUser(BaseContext.getCurrentId())
                     .build();
         dishMapper.update(dish);
+        Dish current = dishMapper.getById(id);
+        if (current != null && current.getCategoryId() != null) stringRedisTemplate.delete("dish_list_" + current.getCategoryId());
         log.info("菜品状态修改成功：id={}, status={}", id, status);
     }
 

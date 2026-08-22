@@ -1,0 +1,23 @@
+<view class="page">
+  <button class="primary add" bindtap="openAdd">新增地址</button>
+  <view wx:for="{{list}}" wx:key="id" class="card address" bindtap="select" data-item="{{item}}">
+    <view class="address-head"><text>{{item.consignee}} {{item.phone}}</text><text wx:if="{{item.isDefault === 1}}" class="default">默认</text></view>
+    <view>{{item.provinceName}}{{item.cityName}}{{item.districtName}}{{item.detail}}</view>
+    <view class="address-actions">
+      <button size="mini" catchtap="setDefault" data-id="{{item.id}}">设为默认</button>
+      <button size="mini" catchtap="openEdit" data-item="{{item}}">编辑</button>
+      <button size="mini" type="warn" catchtap="remove" data-id="{{item.id}}">删除</button>
+    </view>
+  </view>
+
+  <view wx:if="{{formVisible}}" class="mask">
+    <view class="dialog">
+      <view class="dialog-title">{{editing ? '编辑地址' : '新增地址'}}</view>
+      <input placeholder="收货人" value="{{form.consignee}}" data-field="consignee" bindinput="input" />
+      <input placeholder="手机号" value="{{form.phone}}" data-field="phone" bindinput="input" />
+      <input placeholder="详细地址" value="{{form.detail}}" data-field="detail" bindinput="input" />
+      <input placeholder="标签，如：家" value="{{form.label}}" data-field="label" bindinput="input" />
+      <view class="dialog-actions"><button bindtap="save" class="primary">保存</button><button bindtap="close">取消</button></view>
+    </view>
+  </view>
+</view>

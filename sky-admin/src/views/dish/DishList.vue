@@ -18,7 +18,7 @@
       <el-table-column prop="categoryName" label="分类" />
       <el-table-column prop="price" label="价格"><template #default="{ row }">¥{{ row.price }}</template></el-table-column>
       <el-table-column prop="status" label="状态"><template #default="{ row }"><el-switch v-model="row.status" :active-value="1" :inactive-value="0" @change="changeStatus(row)" /></template></el-table-column>
-      <el-table-column label="操作"><template #default="{ row }"><el-button link type="primary" @click="openEdit(row)">编辑</el-button></template></el-table-column>
+      <el-table-column label="操作"><template #default="{ row }"><el-button link type="primary" @click="openEdit(row)">编辑</el-button><el-button link type="danger" @click="remove(row)">删除</el-button></template></el-table-column>
     </el-table>
     <el-pagination v-model:current-page="query.page" :page-size="query.pageSize" :total="total" layout="total,prev,pager,next" @current-change="load" />
   </div>
@@ -38,7 +38,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { categoryApi, dishApi } from '@/api'
 
 const rows = ref([]); const total = ref(0); const loading = ref(false)
@@ -53,6 +53,7 @@ const openAdd = () => { editing.value = false; form.value = emptyForm(); visible
 const openEdit = async (row) => { editing.value = true; form.value = await dishApi.detail(row.id); form.value.flavors ||= []; visible.value = true }
 const save = async () => { await (editing.value ? dishApi.update(form.value) : dishApi.save(form.value)); ElMessage.success('保存成功'); visible.value = false; load() }
 const changeStatus = async (row) => { try { await dishApi.changeStatus(row.status, row.id) } catch { row.status = row.status ? 0 : 1 } }
+const remove = async (row) => { await ElMessageBox.confirm('确认删除该菜品？', '提示'); await dishApi.remove([row.id]); ElMessage.success('删除成功'); load() }
 const uploadImage = async ({ file, onSuccess, onError }) => { try { const result = await dishApi.upload(file); form.value.image = result?.url || result; onSuccess(result) } catch (error) { onError(error) } }
 onMounted(async () => { await loadCategories(); await load() })
 </script>

@@ -78,6 +78,11 @@ public class SetmealServiceImpl implements SetmealService {
           log.warn("删除套餐：ids 为空，不执行任何操作");
           return;
         }
+        List<Long> categoryIds = new java.util.ArrayList<>();
+        for (Long id : ids) {
+            Setmeal old = setmealMapper.getById(id);
+            if (old != null && old.getCategoryId() != null) categoryIds.add(old.getCategoryId());
+        }
         Integer count=setmealMapper.countByStatusAndIds(ids,StatusConstant.ENABLE);
         if(count!=null&& count>0){
             throw new BaseException("起售中的套餐不能删除，请先停售");
@@ -86,6 +91,7 @@ public class SetmealServiceImpl implements SetmealService {
         for(Long id:ids){
             setmealDishMapper.deleteBySetmealId(id);
         }
+        categoryIds.forEach(id -> stringRedisTemplate.delete("setmeal_list_" + id));
         log.info("批量删除套餐成功，ids：{}", ids);
     }
 
@@ -102,6 +108,7 @@ public class SetmealServiceImpl implements SetmealService {
     @Override
     @Transactional
     public void updateWithDish(SetmealDTO setmealDTO){
+        Setmeal old = setmealMapper.getById(setmealDTO.getId());
         Setmeal setmeal=new Setmeal();
         BeanUtils.copyProperties(setmealDTO, setmeal);
         setmeal.setUpdateTime(LocalDateTime.now());
@@ -115,6 +122,8 @@ public class SetmealServiceImpl implements SetmealService {
             }
             setmealDishMapper.insertBatch(setmealDishs);
         }
+        if (old != null && old.getCategoryId() != null) stringRedisTemplate.delete("setmeal_list_" + old.getCategoryId());
+        if (setmealDTO.getCategoryId() != null) stringRedisTemplate.delete("setmeal_list_" + setmealDTO.getCategoryId());
         log.info("修改套餐成功，id：{}", setmealDTO.getId());
     }
 
@@ -128,6 +137,8 @@ public class SetmealServiceImpl implements SetmealService {
                 .updateUser(BaseContext.getCurrentId())
                 .build();
         setmealMapper.update(setmeal);
+        Setmeal current = setmealMapper.getById(id);
+        if (current != null && current.getCategoryId() != null) stringRedisTemplate.delete("setmeal_list_" + current.getCategoryId());
         log.info("修改套餐状态：id={}, status={}", id, status);
     }
     

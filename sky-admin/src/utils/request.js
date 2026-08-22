@@ -21,6 +21,7 @@ request.interceptors.request.use(config => {
 // 3. 响应拦截器（收到响应后自动执行）
 request.interceptors.response.use(
   response => {
+    if (response.config.responseType === 'blob') return response.data
     const res = response.data
     // 后端返回格式：{ code: 1, msg: 'success', data: ... }
     if (res.code !== 1) {

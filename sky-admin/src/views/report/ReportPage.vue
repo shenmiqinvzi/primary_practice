@@ -83,7 +83,14 @@ const load = async () => {
 
 // 导出接口返回文件流，让浏览器直接打开下载地址即可。
 const download = () => {
-  window.open('/api/admin/report/export', '_blank')
+  reportApi.export(getParams()).then(response => {
+    const url = URL.createObjectURL(response)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = '订单报表.xlsx'
+    link.click()
+    URL.revokeObjectURL(url)
+  })
 }
 </script>
 

@@ -219,7 +219,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public void exportExcel(HttpServletResponse response) {
+    public void exportExcel(HttpServletResponse response, LocalDate begin, LocalDate end) {
         try {
             // 1. 设置响应头
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -230,9 +230,9 @@ public class ReportServiceImpl implements ReportService {
             response.setHeader("Content-Disposition",
                     "attachment;filename=" + fileName + ".xlsx");
 
-            // 2. 准备数据（最近 30 天）
-            LocalDate end = LocalDate.now().minusDays(1);  // 截止到昨天
-            LocalDate begin = end.minusDays(29);           // 前 30 天
+            // 未选择日期时，按黑马教学版导出最近 30 天。
+            if (end == null) end = LocalDate.now().minusDays(1);
+            if (begin == null) begin = end.minusDays(29);
 
             // 3. 查询各项数据
             TurnoverReportVO turnover = getTurnoverStatistics(begin, end);
@@ -265,14 +265,16 @@ public class ReportServiceImpl implements ReportService {
                 sheet2List.add(row);
             }
 
-            // 6. 写入 Excel
-            EasyExcel.write(response.getOutputStream())
-                    .sheet("订单概况")
-                    .doWrite(sheet1List);
-
-            EasyExcel.write(response.getOutputStream())
-                    .sheet("销量Top10")
-                    .doWrite(sheet2List);
+            // 6. 写入同一个 Excel 工作簿的两个 Sheet。
+            com.alibaba.excel.ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream()).build();
+            try {
+                com.alibaba.excel.write.metadata.WriteSheet sheet1 = EasyExcel.writerSheet(0, "订单概况").head(OrderStatisticsExcelVO.class).build();
+                com.alibaba.excel.write.metadata.WriteSheet sheet2 = EasyExcel.writerSheet(1, "销量Top10").head(GoodsSalesExcelVO.class).build();
+                excelWriter.write(sheet1List, sheet1);
+                excelWriter.write(sheet2List, sheet2);
+            } finally {
+                excelWriter.finish();
+            }
 
             log.info("Excel 报表导出成功，日期范围：{} ~ {}", begin, end);
 

@@ -45,5 +45,9 @@ Page({
     })
 
     this.onShow()
+  },
+
+  submit() {
+    if (this.data.items.length) wx.navigateTo({ url: '/pages/submit/submit' })
   }
 })

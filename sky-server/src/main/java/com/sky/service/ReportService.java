@@ -30,5 +30,5 @@ public interface ReportService {
     /**
      * 导出 Excel 报表（最近 30 天）
      */
-    void exportExcel(HttpServletResponse response);
+    void exportExcel(HttpServletResponse response, LocalDate begin, LocalDate end);
 }
